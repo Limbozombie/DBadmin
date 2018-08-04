@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DB Admin</title>
+    <meta http-equiv = "content-type" content = "text/html;charset=UTF-8">
+    <script type = "text/javascript" src = "codebase/dhtmlx.js"></script>
+    <script type = "text/javascript" src = "js/jquery.js"></script>
+
+    <link rel = "stylesheet" type = "text/css" href = "codebase/dhtmlx.css">
+    <style>
+        html, body {
+            width: 100%; /*provides the correct work of a full-screen dba.layout*/
+            height: 100%; /*provides the correct work of a full-screen dba.layout*/
+            overflow: hidden; /*hides the default body's space*/
+            margin: 0; /*hides the body's scrolls*/
+        }
+
+        .server {
+            background-image: url(icons/server.gif);
+        }
+
+        .database {
+            background-image: url(icons/database.gif);
+        }
+
+        .table {
+            background-image: url(icons/table.gif);
+        }
+    </style>
+</head>
+<body>
+
+    <script type = "text/javascript">
+        dhtmlxEvent(window, "load", function () {
+            //创建布局
+            var layout = new dhtmlXLayoutObject(document.body, "2U");
+            layout.cells("a").setWidth(250);
+            layout.cells("a").setText("Hierarchy");
+            //隐藏右边cell的标题
+            layout.cells("b").hideHeader();
+            //                                      rootId
+            var treeView = layout.cells("a").attachTreeView(0);
+            //添加toolbar
+            var toolbar = layout.attachToolbar({
+                items: [
+                    {id: "add", type: "button", text: "Add connection", img: "icons/add.png"},
+                    {id: "del", type: "button", text: "Delete connection", img: "icons/del.png"},
+                    {id: "query", type: "button", text: "SQL query", img: "icons/sql.png"}
+                ]
+            });
+            //根据按钮id绑定事件
+            toolbar.attachEvent("onClick", function (id) {
+                switch (id) {
+                    case "add":
+                        //创建窗口对象
+                        //                              id        左偏移,上偏移,宽,高
+                        var win = layout.dhxWins.createWindow("connect", 400, 200, 390, 260);
+                        win.setModal(true);//窗口出现后不能操作其他元素
+                        win.setText("Add connection");
+                        win.denyResize();//不能调整大小
+                        // 添加form表单
+                        var form = win.attachForm([
+                            {
+                                type: "block", width: "auto", offsetLeft: 35, offsetTop: 30, list: [
+                                    {type: "settings", labelWidth: 120},
+                                    {type: "input", name: "serverName", label: "Server Name", required: true},
+                                    {type: "input", name: "userName", label: "User Name"},
+                                    {type: "password", name: "password", label: "Password"},
+                                    {type: "button", name: "save", value: "Save", offsetLeft: 95, offsetTop: 30}
+                                ]
+                            }]);
+                        //光标聚焦到form第一项
+                        form.setFocusOnFirstActive();
+                        //save按钮  绑定点击事件
+                        form.attachEvent("onButtonClick", function () {
+                            //校验
+                            form.validate();
+                        });
+                        //校验结果
+                        form.attachEvent("onAfterValidate", function (status) {
+                            if (status) {
+                                //校验成功,提交表单
+                                //  send（string url，[ string mode，function callback，boolean skipValidation ]）;
+                                form.send("connection", "post", function (loader, response) {
+                                    //添加treeView结构
+                                    var parse = JSON.parse(response);
+                                    treeView.addItem(parse[0], parse[0], null, 0);
+                                    treeView.setItemIcons(parse[0], {folder_opened: "server", folder_closed: "server"});
+                                    treeView.addItem(parse[1], parse[1], parse[0], 1);
+                                    treeView.setItemIcons(parse[1], {folder_opened: "database", folder_closed: "database"});
+                                    for (var i = 2; i < parse.length; i++) {
+                                        //                          id             text            parentID      index
+                                        treeView.addItem("table" + parse[i], parse[i], parse[1], i);
+                                        treeView.setItemIcons("table" + parse[i], {file: "table"});
+                                    }
+                                    //  true 跳过自动校验
+                                }, true);
+                                //关闭表单窗口
+                                win.close();
+                            } else {
+                                //创建错误提示  message
+                                window.dhtmlx.alert("Server Name is empty");
+                            }
+                        });
+                        break;
+                    case "del":
+                        var itemId = treeView.getSelectedId();
+                        if (!itemId) {
+                            dhtmlx.alert({
+                                title: "Information!",
+                                type: "alert-error",
+                                text: "Select any connection first"
+                            });
+                            return;
+                        }
+                        var arr = [itemId];
+                        //赋值操作, itemId =treeView.getParentId(itemId)
+                        //当itemId为null时循环结束
+                        while (itemId = treeView.getParentId(itemId)) {
+                            // push() 向数组(arr)的末尾添加一个或更多元素，并返回新的长度。
+                            arr.push(itemId);
+                        }
+                        //pop() 删除数组(arr)中最后一个元素,并将其返回
+                        itemId = arr.pop();
+                        window.dhtmlx.confirm({
+                            title: "Information!",
+                            type: "confirm-error",
+                            text: "Delete the connection:" + treeView.getItemText(itemId) + "?",
+                            callback: function (result) {
+                                //     true   or    false
+                                // if (result) {
+                                //     dba.delete_connection(data.split("^")[1])
+                                // }
+                                // treeView.clearAll();
+                            }
+                        });
+                        break;
+                    case "query":
+                        if (tabbar.tabs("sql") == null) {
+                            tabbar.addTab("sql", "sql", null, null, true, true);
+                            var sqlToolbar = tabbar.tabs("sql").attachToolbar({
+                                items: [
+                                    {id: "run", type: "button", text: "Run", img: "icons/query.png"},
+                                    {id: "close", type: "button", text: "Close", img: "icons/close.png"}
+                                ]
+                            });
+                            sqlToolbar.attachEvent("onClick", function (buttonId) {
+                                switch (buttonId) {
+                                    case "run":
+                                        //todo
+                                        break;
+                                    case "close":
+                                        tabbar.tabs("sql").close();
+                                        break;
+                                }
+                            });
+                        } else {
+                            tabbar.tabs("sql").setActive();
+                        }
+                        break;
+                }
+            });
+            //添加tabbar
+            var tabbar = layout.cells("b").attachTabbar();
+            tabbar.addTab("start", "Start", null, null, true, false);
+            tabbar.tabs("start").attachHTMLString("<br>&nbsp;&nbsp;Select any entity in treeView to view details");
+            treeView.attachEvent("onClick", function (table) {
+                //匹配以table字符开头的id
+                if (new RegExp("^table").test(table)) {
+                    //去掉开头的table  ,非全局替换
+                    table = table.replace(/table/, "");
+                    if (tabbar.tabs(table) == null) {
+                        // tab为空,则新建
+                        tabbar.addTab(table, table, null, null, true, true);
+                        var tabToolbar = tabbar.tabs(table).attachToolbar({
+                            items: [
+                                {id: "refresh", type: "button", text: "Refresh", img: "icons/refresh.png"},
+                                {id: "structure", type: "button", text: "Structure", img: "icons/structure.png"},
+                                {id: "close", type: "button", text: "Close", img: "icons/close.png"}
+                            ]
+                        });
+
+                        /**
+                         * @param table    表名
+                         * @param structure 是否为查询结构(true/false)
+                         */
+                        function loadGrid(table, structure) {
+                            $.get("retrieve/" + table, {"tableName": table, "structure": structure}, function (data) {
+                                var grid = tabbar.tabs(table).attachGrid();
+                                grid.setHeader(data.head.join(","));
+                                grid.init();
+                                grid.parse(data.data, "jsarray");
+                            });
+                        }
+
+                        loadGrid(table, false);
+                        tabToolbar.attachEvent("onClick", function (buttonId) {
+                            switch (buttonId) {
+                                case "refresh":
+                                    loadGrid(table, false);
+                                    break;
+                                case "structure":
+                                    loadGrid(table, true);
+                                    break;
+                                case "close":
+                                    // close   id  and select start
+                                    tabbar.tabs(table).close();
+                                    break;
+                            }
+                        });
+                    } else {
+                        // 选中指定选项卡并显示其内容
+                        tabbar.tabs(table).setActive();
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
