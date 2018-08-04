@@ -36,7 +36,6 @@ public class ConnectionController {
         tablesList.add("web");
         try {
             con = Utility.getConn(userName , password);
-            //获得数据库的所有表名
             DatabaseMetaData metaData = con.getMetaData();
             ResultSet tables = metaData.getTables(null , null , "%" , null);
             while (tables.next()) {
@@ -65,12 +64,12 @@ public class ConnectionController {
                 String[] headStr = {"Field" , "Type" , "Null" , "Key" , "Default" , "Extra"};
                 Collections.addAll(head , headStr);
             } else {
+                sql = "SELECT * FROM  " + tableName;
                 DatabaseMetaData dm = con.getMetaData();
                 ResultSet colRet = dm.getColumns(null , "%" , tableName , "%");
                 while (colRet.next()) {
                     head.add(colRet.getString("COLUMN_NAME"));
                 }
-                sql = "SELECT * FROM  " + tableName;
             }
             data = new QueryRunner().query(con , sql , new ArrayListHandler());
             map.put("head" , head);

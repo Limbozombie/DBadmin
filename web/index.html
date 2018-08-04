@@ -52,8 +52,7 @@
             toolbar.attachEvent("onClick", function (id) {
                 switch (id) {
                     case "add":
-                        //创建窗口对象
-                        //                              id        左偏移,上偏移,宽,高
+                        //创建窗口对象                                               id       左偏移,上偏移,宽,高
                         var win = layout.dhxWins.createWindow("connect", 400, 200, 390, 260);
                         win.setModal(true);//窗口出现后不能操作其他元素
                         win.setText("Add connection");
@@ -104,8 +103,8 @@
                         });
                         break;
                     case "del":
-                        var itemId = treeView.getSelectedId();
-                        if (!itemId) {
+                        var arr = getIdChain(treeView);
+                        if (arr == null) {
                             dhtmlx.alert({
                                 title: "Information!",
                                 type: "alert-error",
@@ -113,51 +112,58 @@
                             });
                             return;
                         }
-                        var arr = [itemId];
-                        //赋值操作, itemId =treeView.getParentId(itemId)
-                        //当itemId为null时循环结束
-                        while (itemId = treeView.getParentId(itemId)) {
-                            // push() 向数组(arr)的末尾添加一个或更多元素，并返回新的长度。
-                            arr.push(itemId);
-                        }
                         //pop() 删除数组(arr)中最后一个元素,并将其返回
-                        itemId = arr.pop();
+                        var itemId = arr.pop();
                         window.dhtmlx.confirm({
                             title: "Information!",
                             type: "confirm-error",
                             text: "Delete the connection:" + treeView.getItemText(itemId) + "?",
                             callback: function (result) {
                                 //     true   or    false
-                                // if (result) {
-                                //     dba.delete_connection(data.split("^")[1])
-                                // }
-                                // treeView.clearAll();
+                                if (result) {
+                                    treeView.deleteItem(itemId);
+                                }
                             }
                         });
                         break;
                     case "query":
-                        if (tabbar.tabs("sql") == null) {
-                            tabbar.addTab("sql", "sql", null, null, true, true);
-                            var sqlToolbar = tabbar.tabs("sql").attachToolbar({
-                                items: [
-                                    {id: "run", type: "button", text: "Run", img: "icons/query.png"},
-                                    {id: "close", type: "button", text: "Close", img: "icons/close.png"}
-                                ]
+                        var idChain = getIdChain(treeView);
+                        if (idChain == null || idChain.length < 2) {
+                            dhtmlx.alert({
+                                title: "Information!",
+                                type: "alert-error",
+                                text: "You need to select DB first"
                             });
-                            sqlToolbar.attachEvent("onClick", function (buttonId) {
-                                switch (buttonId) {
-                                    case "run":
-                                        //todo
-                                        break;
-                                    case "close":
-                                        tabbar.tabs("sql").close();
-                                        break;
-                                }
-                            });
+                            return;
                         } else {
-                            tabbar.tabs("sql").setActive();
+                            if (tabbar.tabs("sql") == null) {
+                                tabbar.addTab("sql", "sql", null, null, true, true);
+                                var sqlToolbar = tabbar.tabs("sql").attachToolbar({
+                                    items: [
+                                        {id: "run", type: "button", text: "Run", img: "icons/query.png"},
+                                        {id: "close", type: "button", text: "Close", img: "icons/close.png"}
+                                    ]
+                                });
+                                var grid = tabbar.tabs("sql").attachGrid();
+                                grid.enableSmartRendering(true);
+                                grid.setHeader("<textarea style = 'width: 100%; height: 80px; '>Type SQL query here</textarea>")
+                                grid.setInitWidths("*");
+                                grid.init();
+                                sqlToolbar.attachEvent("onClick", function (buttonId) {
+                                    switch (buttonId) {
+                                        case "run":
+                                            //todo
+                                            break;
+                                        case "close":
+                                            tabbar.tabs("sql").close();
+                                            break;
+                                    }
+                                });
+                            } else {
+                                tabbar.tabs("sql").setActive();
+                            }
+                            break;
                         }
-                        break;
                 }
             });
             //添加tabbar
@@ -179,28 +185,14 @@
                                 {id: "close", type: "button", text: "Close", img: "icons/close.png"}
                             ]
                         });
-
-                        /**
-                         * @param table    表名
-                         * @param structure 是否为查询结构(true/false)
-                         */
-                        function loadGrid(table, structure) {
-                            $.get("retrieve/" + table, {"tableName": table, "structure": structure}, function (data) {
-                                var grid = tabbar.tabs(table).attachGrid();
-                                grid.setHeader(data.head.join(","));
-                                grid.init();
-                                grid.parse(data.data, "jsarray");
-                            });
-                        }
-
-                        loadGrid(table, false);
+                        loadGrid(tabbar, table, false);
                         tabToolbar.attachEvent("onClick", function (buttonId) {
                             switch (buttonId) {
                                 case "refresh":
-                                    loadGrid(table, false);
+                                    loadGrid(tabbar, table, false);
                                     break;
                                 case "structure":
-                                    loadGrid(table, true);
+                                    loadGrid(tabbar, table, true);
                                     break;
                                 case "close":
                                     // close   id  and select start
@@ -215,6 +207,35 @@
                 }
             });
         });
+
+        /**
+         *
+         * @param tabbar
+         * @param table
+         * @param structure
+         */
+        function loadGrid(tabbar, table, structure) {
+            $.get("retrieve/" + table, {"tableName": table, "structure": structure}, function (data) {
+                var grid = tabbar.tabs(table).attachGrid();
+                grid.setHeader(data.head.join(","));
+                grid.init();
+                grid.parse(data.data, "jsarray");
+            });
+        }
+
+        function getIdChain(treeView) {
+            var itemId = treeView.getSelectedId();
+            if (itemId == null) {
+                return null;
+            } else {
+                var arr = [itemId];
+                while (itemId = treeView.getParentId(itemId)) {
+                    // push() 向数组(arr)的末尾添加一个或更多元素，并返回新的长度。
+                    arr.push(itemId);
+                }
+                return arr;
+            }
+        }
     </script>
 </body>
 </html>
