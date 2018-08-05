@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -12,11 +13,10 @@ import java.util.Map;
 import newgain.dao.Utility;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.ArrayListHandler;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
-@Controller
+@RestController
 public class ConnectionController {
     
     private String userName;
@@ -26,7 +26,6 @@ public class ConnectionController {
     private Connection con = null;
     
     @RequestMapping("connection")
-    @ResponseBody
     public List<String> getConnection(String serverName , String userName , String password) {
         
         this.userName = userName;
@@ -50,7 +49,6 @@ public class ConnectionController {
     }
     
     @RequestMapping("retrieve/*")
-    @ResponseBody
     public Map<String, List<?>> retrieve(String tableName , String structure) {
         
         Map<String, List<?>> map = new HashMap<String, List<?>>();
@@ -80,6 +78,37 @@ public class ConnectionController {
             Utility.close(rs , stat , con);
         }
         return map;
+    }
+    
+    @RequestMapping("query")
+    public Map<String, Object> query(String sqlStatement) {
+        
+        Map<String, Object> map = new HashMap<String, Object>();
+        try {
+            List<String> head = new ArrayList<String>();
+            con = Utility.getConn(userName , password);
+            ResultSetMetaData rsMetaData = con.prepareStatement(sqlStatement).executeQuery(sqlStatement).getMetaData();
+            for (int i = 1 ; i <= rsMetaData.getColumnCount() ; i++) {
+                String columnName = rsMetaData.getColumnName(i);
+                head.add(columnName);
+            }
+            List data = new QueryRunner().query(con , sqlStatement , new ArrayListHandler());
+            map.put("status" , "ok");
+            map.put("head" , head);
+            map.put("data" , data);
+        } catch (Exception e) {
+            List<String> head = new ArrayList<String>();
+            List<String> data = new ArrayList<String>();
+            head.add("ERROR");
+            data.add(e.getMessage());
+            map.put("status" , "error");
+            map.put("head" , head);
+            map.put("data" , data);
+        } finally {
+            Utility.close(rs , stat , con);
+        }
+        return map;
+        
     }
     
 }

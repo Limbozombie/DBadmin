@@ -4,9 +4,9 @@
     <title>DB Admin</title>
     <meta http-equiv = "content-type" content = "text/html;charset=UTF-8">
     <script type = "text/javascript" src = "codebase/dhtmlx.js"></script>
-    <script type = "text/javascript" src = "js/jquery.js"></script>
-
     <link rel = "stylesheet" type = "text/css" href = "codebase/dhtmlx.css">
+    <script type = "text/javascript" src = "js/jquery.js"></script>
+    <link rel = "icon" href = "icons/favicon.ico" type = "image/x-icon">
     <style>
         html, body {
             width: 100%; /*provides the correct work of a full-screen dba.layout*/
@@ -38,8 +38,10 @@
             layout.cells("a").setText("Hierarchy");
             //隐藏右边cell的标题
             layout.cells("b").hideHeader();
-            //                                      rootId
-            var treeView = layout.cells("a").attachTreeView(0);
+            //   添加treeView
+            var treeView = layout.cells("a").attachTreeView();
+            //添加tabbar
+            var tabbar = layout.cells("b").attachTabbar();
             //添加toolbar
             var toolbar = layout.attachToolbar({
                 items: [
@@ -82,15 +84,15 @@
                                 //  send（string url，[ string mode，function callback，boolean skipValidation ]）;
                                 form.send("connection", "post", function (loader, response) {
                                     //添加treeView结构
-                                    var parse = JSON.parse(response);
-                                    treeView.addItem(parse[0], parse[0], null, 0);
-                                    treeView.setItemIcons(parse[0], {folder_opened: "server", folder_closed: "server"});
-                                    treeView.addItem(parse[1], parse[1], parse[0], 1);
-                                    treeView.setItemIcons(parse[1], {folder_opened: "database", folder_closed: "database"});
-                                    for (var i = 2; i < parse.length; i++) {
+                                    var parsedData = JSON.parse(response);
+                                    treeView.addItem(parsedData[0], parsedData[0], null, 0);
+                                    treeView.setItemIcons(parsedData[0], {folder_opened: "server", folder_closed: "server"});
+                                    treeView.addItem(parsedData[1], parsedData[1], parsedData[0], 1);
+                                    treeView.setItemIcons(parsedData[1], {folder_opened: "database", folder_closed: "database"});
+                                    for (var i = 2; i < parsedData.length; i++) {
                                         //                          id             text            parentID      index
-                                        treeView.addItem("table" + parse[i], parse[i], parse[1], i);
-                                        treeView.setItemIcons("table" + parse[i], {file: "table"});
+                                        treeView.addItem("table" + parsedData[i], parsedData[i], parsedData[1], i);
+                                        treeView.setItemIcons("table" + parsedData[i], {file: "table"});
                                     }
                                     //  true 跳过自动校验
                                 }, true);
@@ -122,6 +124,11 @@
                                 //     true   or    false
                                 if (result) {
                                     treeView.deleteItem(itemId);
+                                    var tabIds = tabbar.getAllTabs();
+                                    alert(tabIds[0]);
+                                    for (var i = 1; i < tabIds.length; i++) {
+                                        tabbar.tabs(tabIds[i]).close();
+                                    }
                                 }
                             }
                         });
@@ -144,15 +151,29 @@
                                         {id: "close", type: "button", text: "Close", img: "icons/close.png"}
                                     ]
                                 });
-                                var grid = tabbar.tabs("sql").attachGrid();
-                                grid.enableSmartRendering(true);
-                                grid.setHeader("<textarea style = 'width: 100%; height: 80px; '>Type SQL query here</textarea>")
-                                grid.setInitWidths("*");
-                                grid.init();
+                                var sqlLayout = tabbar.tabs("sql").attachLayout("2E");
+                                sqlLayout.cells("a").hideHeader();
+                                sqlLayout.cells("a").attachHTMLString("<textarea  style = 'width: 100%; height: 100%; ' id='sqlStatement' placeholder='Type SQL query here'></textarea>");
+                                sqlLayout.cells("b").hideHeader();
                                 sqlToolbar.attachEvent("onClick", function (buttonId) {
                                     switch (buttonId) {
                                         case "run":
-                                            //todo
+                                            var sqlStatement = $('#sqlStatement').val();
+                                            $.post("query", {"sqlStatement": sqlStatement}, function (data) {
+                                                var sqlGrid = sqlLayout.cells("b").attachGrid();
+                                                sqlGrid.setHeader(data.head.join(","));
+                                                sqlGrid.init();
+                                                if (data.status !== "ok") {
+                                                    //将数据定义成json格式,添加样式,以备grid加载
+                                                    var result = {
+                                                        rows: [{style: "color:red", data: data.data}]
+                                                    };
+                                                    sqlGrid.parse(result, "json");
+                                                } else {
+                                                    //grid直接加载数组格式
+                                                    sqlGrid.parse(data.data, "jsarray");
+                                                }
+                                            });
                                             break;
                                         case "close":
                                             tabbar.tabs("sql").close();
@@ -166,8 +187,6 @@
                         }
                 }
             });
-            //添加tabbar
-            var tabbar = layout.cells("b").attachTabbar();
             tabbar.addTab("start", "Start", null, null, true, false);
             tabbar.tabs("start").attachHTMLString("<br>&nbsp;&nbsp;Select any entity in treeView to view details");
             treeView.attachEvent("onClick", function (table) {
@@ -208,12 +227,6 @@
             });
         });
 
-        /**
-         *
-         * @param tabbar
-         * @param table
-         * @param structure
-         */
         function loadGrid(tabbar, table, structure) {
             $.get("retrieve/" + table, {"tableName": table, "structure": structure}, function (data) {
                 var grid = tabbar.tabs(table).attachGrid();

@@ -36,4 +36,9 @@ public class ConnectionControllerTest extends BaseTest {
         
         mv.perform(post("/showTable/user")).andDo(print());
     }
+    @Test
+    public void query () throws Exception {
+        mv.perform(post("/query?sqlStatement=select * from a")).andDo(print());
+    }
+    
 }
