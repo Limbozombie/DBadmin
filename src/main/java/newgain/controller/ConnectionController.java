@@ -41,6 +41,7 @@ public class ConnectionController {
                 tablesList.add(tables.getString("TABLE_NAME"));
             }
         } catch (Exception e) {
+            //todo 尚未处理异常
             e.printStackTrace();
         } finally {
             Utility.close(rs , stat , con);
@@ -59,6 +60,7 @@ public class ConnectionController {
             con = Utility.getConn(userName , password);
             if ("true".equals(structure)) {
                 sql = "DESC  " + tableName;
+                //写死,减少消耗
                 String[] headStr = {"Field" , "Type" , "Null" , "Key" , "Default" , "Extra"};
                 Collections.addAll(head , headStr);
             } else {
@@ -73,6 +75,7 @@ public class ConnectionController {
             map.put("head" , head);
             map.put("data" , data);
         } catch (Exception e) {
+            //todo 尚未处理异常
             e.printStackTrace();
         } finally {
             Utility.close(rs , stat , con);
@@ -84,8 +87,8 @@ public class ConnectionController {
     public Map<String, Object> query(String sqlStatement) {
         
         Map<String, Object> map = new HashMap<String, Object>();
+        List<String> head = new ArrayList<String>();
         try {
-            List<String> head = new ArrayList<String>();
             con = Utility.getConn(userName , password);
             ResultSetMetaData rsMetaData = con.prepareStatement(sqlStatement).executeQuery(sqlStatement).getMetaData();
             for (int i = 1 ; i <= rsMetaData.getColumnCount() ; i++) {
@@ -97,7 +100,6 @@ public class ConnectionController {
             map.put("head" , head);
             map.put("data" , data);
         } catch (Exception e) {
-            List<String> head = new ArrayList<String>();
             List<String> data = new ArrayList<String>();
             head.add("ERROR");
             data.add(e.getMessage());
