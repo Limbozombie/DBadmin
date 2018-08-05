@@ -18,7 +18,7 @@ public class Utility {
         //注册驱动
         Class.forName("com.mysql.jdbc.Driver");
         //创建连接
-        return DriverManager.getConnection("jdbc:mysql://localhost:3306/web" ,name , password);
+        return DriverManager.getConnection("jdbc:mysql://localhost:3306/web?useUnicode=true&characterEncoding=utf8" ,name , password);
     }
     
     /**

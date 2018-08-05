@@ -125,7 +125,6 @@
                                 if (result) {
                                     treeView.deleteItem(itemId);
                                     var tabIds = tabbar.getAllTabs();
-                                    alert(tabIds[0]);
                                     for (var i = 1; i < tabIds.length; i++) {
                                         tabbar.tabs(tabIds[i]).close();
                                     }

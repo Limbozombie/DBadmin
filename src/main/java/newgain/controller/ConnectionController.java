@@ -85,7 +85,6 @@ public class ConnectionController {
     
     @RequestMapping("query")
     public Map<String, Object> query(String sqlStatement) {
-        
         Map<String, Object> map = new HashMap<String, Object>();
         List<String> head = new ArrayList<String>();
         try {
@@ -100,6 +99,7 @@ public class ConnectionController {
             map.put("head" , head);
             map.put("data" , data);
         } catch (Exception e) {
+            System.out.println(e.getMessage());
             List<String> data = new ArrayList<String>();
             head.add("ERROR");
             data.add(e.getMessage());
