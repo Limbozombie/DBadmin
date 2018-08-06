@@ -94,12 +94,13 @@
                                         treeView.addItem(parsedData[1], parsedData[1], parsedData[0], 1);
                                         treeView.setItemIcons(parsedData[1], {folder_opened: "database", folder_closed: "database"});
                                         for (var i = 2; i < parsedData.length; i++) {
-                                            //                          id             text            parentID      index
+                                            //                                        id                     text            parentID      index
                                             treeView.addItem("table" + parsedData[i], parsedData[i], parsedData[1], i);
                                             treeView.setItemIcons("table" + parsedData[i], {file: "table"});
                                         }
                                     } else {
                                         treeView.addItem(parsedData[0], parsedData[0], null, 0);
+                                        treeView.setItemIcons(parsedData[0], {file: "server"});
                                     }
                                     //  true 跳过自动校验
                                 }, true);
@@ -238,7 +239,16 @@
                 var grid = tabbar.tabs(table).attachGrid();
                 grid.setHeader(data.head.join(","));
                 grid.init();
-                grid.parse(data.data, "jsarray");
+                if (data.status !== "ok") {
+                    //将数据定义成json格式,添加样式,以备grid加载
+                    var result = {
+                        rows: [{style: "color:red", data: data.data}]
+                    };
+                    grid.parse(result, "json");
+                } else {
+                    //grid直接加载数组格式
+                    grid.parse(data.data, "jsarray");
+                }
             });
         }
 

@@ -14,11 +14,11 @@ public class Utility {
     /**
      * 获取连接
      */
-    public static Connection getConn(String name,String password) throws Exception {
+    public static Connection getConn(String name , String password) throws Exception {
         //注册驱动
         Class.forName("com.mysql.jdbc.Driver");
         //创建连接
-        return DriverManager.getConnection("jdbc:mysql://localhost:3306/web?useUnicode=true&characterEncoding=utf8" ,name , password);
+        return DriverManager.getConnection("jdbc:mysql://localhost:3306/web?useUnicode=true&characterEncoding=utf8" , name , password);
     }
     
     /**

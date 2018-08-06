@@ -49,6 +49,7 @@ public class ConnectionController {
             tablesList.clear();
             tablesList.add("Connection Error,Try Again");
             map.put("tableList" , tablesList);
+//            e.printStackTrace();
         } finally {
             Utility.close(rs , stat , con);
         }
@@ -56,11 +57,10 @@ public class ConnectionController {
     }
     
     @RequestMapping("retrieve/*")
-    public Map<String, List<?>> retrieve(String tableName , String structure) {
+    public Map<String, Object> retrieve(String tableName , String structure) {
         
-        Map<String, List<?>> map = new HashMap<String, List<?>>();
+        Map<String, Object> map = new HashMap<String, Object>();
         List<String> head = new ArrayList<String>();
-        List data;
         String sql;
         try {
             con = Utility.getConn(userName , password);
@@ -77,12 +77,19 @@ public class ConnectionController {
                     head.add(colRet.getString("COLUMN_NAME"));
                 }
             }
-            data = new QueryRunner().query(con , sql , new ArrayListHandler());
+            List data = new QueryRunner().query(con , sql , new ArrayListHandler());
+            map.put("status" , "ok");
             map.put("head" , head);
             map.put("data" , data);
         } catch (Exception e) {
-            //todo 尚未处理异常
-            e.printStackTrace();
+            map.put("status" , "error");
+            head.clear();
+            head.add("Error");
+            map.put("head" , head);
+            List<String> data = new ArrayList<String>();
+            data.add("Inner Exception");
+            map.put("data" , data);
+//            e.printStackTrace();
         } finally {
             Utility.close(rs , stat , con);
         }
@@ -107,11 +114,12 @@ public class ConnectionController {
             map.put("data" , data);
         } catch (Exception e) {
             List<String> data = new ArrayList<String>();
-            head.add("ERROR");
+            head.add("Error");
             data.add(e.getMessage());
             map.put("status" , "error");
             map.put("head" , head);
             map.put("data" , data);
+//            e.printStackTrace();
         } finally {
             Utility.close(rs , stat , con);
         }

@@ -34,7 +34,7 @@ public class ConnectionControllerTest extends BaseTest {
     @Test
     public void retrieve() throws Exception {
         
-        mv.perform(post("/showTable/user")).andDo(print());
+        mv.perform(post("/retrieve/user")).andDo(print());
     }
     @Test
     public void query () throws Exception {
