@@ -34,11 +34,13 @@ public class ConnectionControllerTest extends BaseTest {
     @Test
     public void retrieve() throws Exception {
         
-        mv.perform(post("/retrieve/user")).andDo(print());
+        mv.perform(post("/retrieve?tableName=user&structure=true")).andDo(print());
     }
+    
     @Test
-    public void query () throws Exception {
-        mv.perform(post("/query?sqlStatement=select * from a")).andDo(print());
+    public void query() throws Exception {
+        
+        mv.perform(post("/query?sqlStatement=select * from books")).andDo(print());
     }
     
 }

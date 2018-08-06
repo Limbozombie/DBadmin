@@ -235,7 +235,7 @@
         });
 
         function loadGrid(tabbar, table, structure) {
-            $.get("retrieve/" + table, {"tableName": table, "structure": structure}, function (data) {
+            $.get("retrieve", {"tableName": table, "structure": structure}, function (data) {
                 var grid = tabbar.tabs(table).attachGrid();
                 grid.setHeader(data.head.join(","));
                 grid.init();

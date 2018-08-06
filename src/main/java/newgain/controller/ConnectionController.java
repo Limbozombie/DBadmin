@@ -31,100 +31,98 @@ public class ConnectionController {
         this.userName = userName;
         this.password = password;
         Map<String, Object> map = new HashMap<String, Object>();
-        
-        List<String> tablesList = new ArrayList<String>();
-        tablesList.add(serverName);
-        tablesList.add("web");
+        List<String> data = new ArrayList<String>();
+        data.add(serverName);
+        data.add("web");
         try {
             con = Utility.getConn(userName , password);
             DatabaseMetaData metaData = con.getMetaData();
             ResultSet tables = metaData.getTables(null , null , "%" , null);
             while (tables.next()) {
-                tablesList.add(tables.getString("TABLE_NAME"));
+                data.add(tables.getString("TABLE_NAME"));
             }
             map.put("status" , "ok");
-            map.put("tableList" , tablesList);
+            map.put("tableList" , data);
         } catch (Exception e) {
             map.put("status" , "error");
-            tablesList.clear();
-            tablesList.add("Connection Error,Try Again");
-            map.put("tableList" , tablesList);
-//            e.printStackTrace();
+            data.clear();
+            data.add("Connection Error,Try Again");
+            map.put("tableList" , data);
+            //            e.printStackTrace();
         } finally {
             Utility.close(rs , stat , con);
         }
         return map;
     }
     
-    @RequestMapping("retrieve/*")
+    @RequestMapping("retrieve")
     public Map<String, Object> retrieve(String tableName , String structure) {
         
-        Map<String, Object> map = new HashMap<String, Object>();
-        List<String> head = new ArrayList<String>();
-        String sql;
-        try {
-            con = Utility.getConn(userName , password);
-            if ("true".equals(structure)) {
-                sql = "DESC  " + tableName;
-                //写死,减少消耗
-                String[] headStr = {"Field" , "Type" , "Null" , "Key" , "Default" , "Extra"};
-                Collections.addAll(head , headStr);
-            } else {
-                sql = "SELECT * FROM  " + tableName;
-                DatabaseMetaData dm = con.getMetaData();
-                ResultSet colRet = dm.getColumns(null , "%" , tableName , "%");
-                while (colRet.next()) {
-                    head.add(colRet.getString("COLUMN_NAME"));
-                }
-            }
-            List data = new QueryRunner().query(con , sql , new ArrayListHandler());
-            map.put("status" , "ok");
-            map.put("head" , head);
-            map.put("data" , data);
-        } catch (Exception e) {
-            map.put("status" , "error");
-            head.clear();
-            head.add("Error");
-            map.put("head" , head);
-            List<String> data = new ArrayList<String>();
-            data.add("Inner Exception");
-            map.put("data" , data);
-//            e.printStackTrace();
-        } finally {
-            Utility.close(rs , stat , con);
-        }
-        return map;
+        String[] str = {tableName , structure};
+        return getMap(str);
     }
     
     @RequestMapping("query")
     public Map<String, Object> query(String sqlStatement) {
         
+        String[] str = {sqlStatement};
+        return getMap(str);
+    }
+    
+    private Map<String, Object> getMap(String[] str) {
+        
         Map<String, Object> map = new HashMap<String, Object>();
         List<String> head = new ArrayList<String>();
+        List<Object> data = new ArrayList<Object>();
+        String sql = "";
+        switch (str.length) {
+            case 1:
+                sql = str[0];
+                break;
+            case 2:
+                String tableName = str[0];
+                String structure = str[1];
+                if ("true".equals(structure)) {
+                    sql = "DESC  " + tableName;
+                } else {
+                    sql = "SELECT * FROM  " + tableName;
+                }
+                break;
+        }
         try {
             con = Utility.getConn(userName , password);
-            ResultSetMetaData rsMetaData = con.prepareStatement(sqlStatement).executeQuery(sqlStatement).getMetaData();
-            for (int i = 1 ; i <= rsMetaData.getColumnCount() ; i++) {
+            ResultSet rs = con.prepareStatement(sql).executeQuery(sql);
+            ResultSetMetaData rsMetaData = rs.getMetaData();
+            int columnCount = rsMetaData.getColumnCount();
+            //从上到下 , 从左到右
+            while (rs.next()) {
+                List<Object> record = new ArrayList<Object>();
+                for (int i = 1 ; i <= columnCount ; i++) {
+                    record.add(rs.getObject(i));
+                }
+                data.add(record);
+            }
+            for (int i = 1 ; i <= columnCount ; i++) {
                 String columnName = rsMetaData.getColumnName(i);
                 head.add(columnName);
             }
-            List data = new QueryRunner().query(con , sqlStatement , new ArrayListHandler());
             map.put("status" , "ok");
             map.put("head" , head);
             map.put("data" , data);
         } catch (Exception e) {
-            List<String> data = new ArrayList<String>();
+            //清空head 和data
+            //            鬼知道try里面的异常出现在哪行
+            head.clear();
+            data.clear();
+            
             head.add("Error");
             data.add(e.getMessage());
             map.put("status" , "error");
             map.put("head" , head);
             map.put("data" , data);
-//            e.printStackTrace();
         } finally {
             Utility.close(rs , stat , con);
         }
         return map;
-        
     }
-    
 }
