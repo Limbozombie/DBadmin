@@ -6,6 +6,9 @@
         <fileset id="fileset" name="Spring Application Context" removed="false">
           <file>file://$MODULE_DIR$/src/main/resources/spring/spring-mvc.xml</file>
         </fileset>
+        <fileset id="web dispatcher servlet context" name="MVC dispatcher servlet context" removed="true">
+          <file>file://$MODULE_DIR$/src/main/resources/spring/spring-mvc.xml</file>
+        </fileset>
       </configuration>
     </facet>
     <facet type="web" name="Web">
@@ -44,7 +47,7 @@
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.9.6" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.mockito:mockito-all:1.10.19" level="project" />
     <orderEntry type="library" name="Maven: commons-dbutils:commons-dbutils:1.5" level="project" />
-    <orderEntry type="library" name="spring5.0.7" level="application" />
-    <orderEntry type="library" scope="PROVIDED" name="Tomcat 8.5.31" level="application_server_libraries" />
+    <orderEntry type="library" name="Spring" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Tomcat 8.5.32" level="application_server_libraries" />
   </component>
 </module>

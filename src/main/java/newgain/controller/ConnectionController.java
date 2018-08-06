@@ -26,10 +26,12 @@ public class ConnectionController {
     private Connection con = null;
     
     @RequestMapping("connection")
-    public List<String> getConnection(String serverName , String userName , String password) {
+    public Map<String, Object> getConnection(String serverName , String userName , String password) {
         
         this.userName = userName;
         this.password = password;
+        Map<String, Object> map = new HashMap<String, Object>();
+        
         List<String> tablesList = new ArrayList<String>();
         tablesList.add(serverName);
         tablesList.add("web");
@@ -40,13 +42,17 @@ public class ConnectionController {
             while (tables.next()) {
                 tablesList.add(tables.getString("TABLE_NAME"));
             }
+            map.put("status" , "ok");
+            map.put("tableList" , tablesList);
         } catch (Exception e) {
-            //todo 尚未处理异常
-            e.printStackTrace();
+            map.put("status" , "error");
+            tablesList.clear();
+            tablesList.add("Connection Error,Try Again");
+            map.put("tableList" , tablesList);
         } finally {
             Utility.close(rs , stat , con);
         }
-        return tablesList;
+        return map;
     }
     
     @RequestMapping("retrieve/*")
@@ -85,6 +91,7 @@ public class ConnectionController {
     
     @RequestMapping("query")
     public Map<String, Object> query(String sqlStatement) {
+        
         Map<String, Object> map = new HashMap<String, Object>();
         List<String> head = new ArrayList<String>();
         try {
@@ -99,7 +106,6 @@ public class ConnectionController {
             map.put("head" , head);
             map.put("data" , data);
         } catch (Exception e) {
-            System.out.println(e.getMessage());
             List<String> data = new ArrayList<String>();
             head.add("ERROR");
             data.add(e.getMessage());

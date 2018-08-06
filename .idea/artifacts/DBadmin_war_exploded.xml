@@ -14,7 +14,7 @@
           <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.9.0" />
           <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-core:2.9.6" />
           <element id="library" level="project" name="Maven: commons-dbutils:commons-dbutils:1.5" />
-          <element id="library" level="application" name="spring5.0.7" />
+          <element id="library" level="project" name="Spring" />
         </element>
       </element>
       <element id="javaee-facet-resources" facet="DBadmin/web/Web" />
