@@ -6,13 +6,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import newgain.dao.Utility;
-import org.apache.commons.dbutils.QueryRunner;
-import org.apache.commons.dbutils.handlers.ArrayListHandler;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -48,7 +45,7 @@ public class ConnectionController {
             data.clear();
             data.add("Connection Error,Try Again");
             map.put("tableList" , data);
-            //            e.printStackTrace();
+            System.out.println(e.getMessage());
         } finally {
             Utility.close(rs , stat , con);
         }
@@ -120,9 +117,11 @@ public class ConnectionController {
             map.put("status" , "error");
             map.put("head" , head);
             map.put("data" , data);
+            System.out.println(e.getMessage());
         } finally {
             Utility.close(rs , stat , con);
         }
+        
         return map;
     }
 }
