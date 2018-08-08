@@ -99,8 +99,11 @@
                                             treeView.setItemIcons("table" + parsedData[i], {file: "table"});
                                         }
                                     } else {
-                                        treeView.addItem(parsedData[0], parsedData[0], null, 0);
-                                        treeView.setItemIcons(parsedData[0], {file: "server"});
+                                        dhtmlx.alert({
+                                            title: "Information!",
+                                            type: "alert-error",
+                                            text: parsedData[0]
+                                        });
                                     }
                                     //  true 跳过自动校验
                                 }, true);
