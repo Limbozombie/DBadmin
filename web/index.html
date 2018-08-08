@@ -83,8 +83,6 @@
                                 //校验成功,提交表单
                                 //  send（string url，[ string mode，function callback，boolean skipValidation ]）;
                                 form.send("connection", "post", function (loader) {
-                                    console.log(loader);
-                                    console.log(loader.xmlDoc.response);
                                     var parsedResponse = JSON.parse(loader.xmlDoc.response);
                                     var parsedData = parsedResponse.tableList;
                                     if (parsedResponse.status === "ok") {
@@ -136,6 +134,7 @@
                                 if (result) {
                                     treeView.deleteItem(itemId);
                                     var tabIds = tabbar.getAllTabs();
+                                    tabbar.tabs(tabIds[0]).setActive();
                                     for (var i = 1; i < tabIds.length; i++) {
                                         tabbar.tabs(tabIds[i]).close();
                                     }
@@ -173,15 +172,15 @@
                                                 var sqlGrid = sqlLayout.cells("b").attachGrid();
                                                 sqlGrid.setHeader(data.head.join(","));
                                                 sqlGrid.init();
-                                                if (data.status !== "ok") {
+                                                if (data.status === "ok") {
+                                                    //grid直接加载数组格式
+                                                    sqlGrid.parse(data.data, "jsarray");
+                                                } else {
                                                     //将数据定义成json格式,添加样式,以备grid加载
                                                     var result = {
                                                         rows: [{style: "color:red", data: data.data}]
                                                     };
                                                     sqlGrid.parse(result, "json");
-                                                } else {
-                                                    //grid直接加载数组格式
-                                                    sqlGrid.parse(data.data, "jsarray");
                                                 }
                                             });
                                             break;

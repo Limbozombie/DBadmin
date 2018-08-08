@@ -13250,7 +13250,7 @@ dhtmlXPopup.prototype.attachTreeView = function (e, a, c) {
     if (c == null) {
         c = {}
     }
-    return this._attachNode("treeview",
+    return this._attachNode("tree",
         {width: e || 400, height: a || 300, conf: c})
 };
 dhtmlXPopup.prototype._attach_init_treeview = function (a) {
@@ -34042,7 +34042,7 @@ dhtmlXTreeView.prototype.getLevel = function (e) {
 };
 if (typeof(window.dhtmlXCellObject) == "function") {
     dhtmlXCellObject.prototype.attachTreeView = function (e) {
-        this.callEvent("_onBeforeContentAttach", ["treeview"]);
+        this.callEvent("_onBeforeContentAttach", ["tree"]);
         var h = document.createElement("DIV");
         h.style.position = "relative";
         h.style.overflow = "hidden";
@@ -34057,7 +34057,7 @@ if (typeof(window.dhtmlXCellObject) == "function") {
                 }
             }
         }
-        this.dataType = "treeview";
+        this.dataType = "tree";
         this.dataObj = new dhtmlXTreeView(g);
         if (typeof(window.dhtmlXWindowsCell) == "function" && this
             instanceof window.dhtmlXWindowsCell) {
