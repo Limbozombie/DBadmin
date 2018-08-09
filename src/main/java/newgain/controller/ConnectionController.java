@@ -1,7 +1,6 @@
 package newgain.controller;
 
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -17,11 +16,8 @@ import newgain.entity.tree.Icons;
 import newgain.entity.tree.TreeDB;
 import newgain.entity.tree.TreeServer;
 import newgain.entity.tree.TreeTable;
-import org.apache.commons.dbutils.QueryRunner;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
-import sun.awt.image.DataBufferNative;
 
 @RestController
 public class ConnectionController {
