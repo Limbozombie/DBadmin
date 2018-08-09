@@ -36,4 +36,24 @@ public class TreeDB {
         
         this.items = items;
     }
+    
+    public String getId() {
+        
+        return id;
+    }
+    
+    public String getText() {
+        
+        return text;
+    }
+    
+    public Icons getIcons() {
+        
+        return icons;
+    }
+    
+    public List<TreeTable> getItems() {
+        
+        return items;
+    }
 }

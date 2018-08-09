@@ -27,4 +27,19 @@ public class TreeTable {
         
         this.icons = icons;
     }
+    
+    public String getId() {
+        
+        return id;
+    }
+    
+    public String getText() {
+        
+        return text;
+    }
+    
+    public Icons getIcons() {
+        
+        return icons;
+    }
 }

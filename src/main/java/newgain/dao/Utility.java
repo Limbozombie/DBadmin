@@ -18,7 +18,13 @@ public class Utility {
         //注册驱动
         Class.forName("com.mysql.jdbc.Driver");
         //创建连接
-        return DriverManager.getConnection("jdbc:mysql://localhost:3306/web?useUnicode=true&characterEncoding=utf8" , name , password);
+        return DriverManager.getConnection("jdbc:mysql://localhost:3306/?useUnicode=true&characterEncoding=utf8" , name , password);
+    }
+    public static Connection getConn(String database , String name , String password) throws Exception {
+        //注册驱动
+        Class.forName("com.mysql.jdbc.Driver");
+        //创建连接
+        return DriverManager.getConnection("jdbc:mysql://localhost:3306/" + database + "?useUnicode=true&characterEncoding=utf8" , name , password);
     }
     
     /**

@@ -6,6 +6,8 @@
     <script type = "text/javascript" src = "codebase/dhtmlx.js"></script>
     <link rel = "stylesheet" type = "text/css" href = "codebase/dhtmlx.css">
     <script type = "text/javascript" src = "js/jquery.js"></script>
+    <!--兼容ie 6,7,8等-->
+    <script type = "text/javascript" src = "js/json3.js"></script>
     <link rel = "icon" href = "icons/favicon.ico" type = "image/x-icon">
     <style>
         html, body {
@@ -46,7 +48,7 @@
             var toolbar = layout.attachToolbar({
                 items: [
                     {id: "add", type: "button", text: "Add connection", img: "icons/add.png"},
-                    {id: "del", type: "button", text: "Delete connection", img: "icons/del.png"},
+                    {id: "del", type: "button", text: "Delete connection", img: "icons/delconnection.png"},
                     {id: "query", type: "button", text: "SQL query", img: "icons/sql.png"}
                 ]
             });
@@ -72,35 +74,20 @@
                             }]);
                         //光标聚焦到form第一项
                         form.setFocusOnFirstActive();
-                        //save按钮  绑定点击事件
-                        form.attachEvent("onButtonClick", function () {
-                            //校验
-                            form.validate();
-                        });
                         //校验结果
-                        form.attachEvent("onAfterValidate", function (status) {
-                            if (status) {
+                        form.attachEvent("onButtonClick", function () {
+                            if (form.getInput("serverName").value.trim() !== "") {
                                 //校验成功,提交表单
                                 //  send（string url，[ string mode，function callback，boolean skipValidation ]）;
                                 form.send("connection", "post", function (loader) {
                                     var parsedResponse = JSON.parse(loader.xmlDoc.response);
-                                    var parsedData = parsedResponse.tableList;
                                     if (parsedResponse.status === "ok") {
-                                        //添加treeView结构
-                                        treeView.addItem(parsedData[0], parsedData[0], null, 0);
-                                        treeView.setItemIcons(parsedData[0], {folder_opened: "server", folder_closed: "server"});
-                                        treeView.addItem(parsedData[1], parsedData[1], parsedData[0], 1);
-                                        treeView.setItemIcons(parsedData[1], {folder_opened: "database", folder_closed: "database"});
-                                        for (var i = 2; i < parsedData.length; i++) {
-                                            //                                        id                     text            parentID      index
-                                            treeView.addItem("table" + parsedData[i], parsedData[i], parsedData[1], i);
-                                            treeView.setItemIcons("table" + parsedData[i], {file: "table"});
-                                        }
+                                        treeView.loadStruct(parsedResponse.data, null);
                                     } else {
                                         dhtmlx.alert({
                                             title: "Information!",
                                             type: "alert-error",
-                                            text: parsedData[0]
+                                            text: parsedResponse.data
                                         });
                                     }
                                     //  true 跳过自动校验
@@ -108,6 +95,8 @@
                                 //关闭表单窗口
                                 win.close();
                             } else {
+                                //清除之前输入的数据
+                                form.getInput("serverName").value = "";
                                 //创建错误提示  message
                                 window.dhtmlx.alert("Server Name is empty");
                             }
@@ -168,19 +157,13 @@
                                     switch (buttonId) {
                                         case "run":
                                             var sqlStatement = $('#sqlStatement').val();
-                                            $.post("query", {"sqlStatement": sqlStatement}, function (data) {
-                                                var sqlGrid = sqlLayout.cells("b").attachGrid();
-                                                sqlGrid.setHeader(data.head.join(","));
-                                                sqlGrid.init();
-                                                if (data.status === "ok") {
-                                                    //grid直接加载数组格式
-                                                    sqlGrid.parse(data.data, "jsarray");
-                                                } else {
-                                                    //将数据定义成json格式,添加样式,以备grid加载
-                                                    var result = {
-                                                        rows: [{style: "color:red", data: data.data}]
-                                                    };
-                                                    sqlGrid.parse(result, "json");
+                                            var parameters = {"DBName": idChain[1].split("|").pop(), "sqlStatement": sqlStatement};
+                                            $.ajax({
+                                                url: "query", data: parameters, type: "post",
+                                                dataType: "json", success: function (data) {
+                                                    sqlLayout.cells("b").attachGrid().parse(data, "json");
+                                                }, error: function () {
+                                                    window.dhtmlx.alert("Inner Exception,Try again later");
                                                 }
                                             });
                                             break;
@@ -198,57 +181,87 @@
             });
             tabbar.addTab("start", "Start", null, null, true, false);
             tabbar.tabs("start").attachHTMLString("<br>&nbsp;&nbsp;Select any entity in treeView to view details");
-            treeView.attachEvent("onClick", function (table) {
-                //匹配以table字符开头的id
-                if (new RegExp("^table").test(table)) {
-                    //去掉开头的table  ,非全局替换
-                    table = table.replace(/table/, "");
-                    if (tabbar.tabs(table) == null) {
+            treeView.attachEvent("onClick", function (chain) {
+                var tableArray = chain.split("|");
+                var DBName = tableArray[1];
+                var tableName = tableArray[2];
+                if (tableName) {
+                    if (tabbar.tabs(tableName) == null) {
                         // tab为空,则新建
-                        tabbar.addTab(table, table, null, null, true, true);
-                        var tabToolbar = tabbar.tabs(table).attachToolbar({
+                        tabbar.addTab(tableName, tableName, null, null, true, true);
+                        var tabToolbar = tabbar.tabs(tableName).attachToolbar({
                             items: [
                                 {id: "refresh", type: "button", text: "Refresh", img: "icons/refresh.png"},
                                 {id: "structure", type: "button", text: "Structure", img: "icons/structure.png"},
+                                {id: "del", type: "button", text: "Delete", img: "icons/delrow.gif"},
                                 {id: "close", type: "button", text: "Close", img: "icons/close.png"}
                             ]
                         });
-                        loadGrid(tabbar, table, false);
+                        loadGrid(tabbar, DBName, tableName, false);
                         tabToolbar.attachEvent("onClick", function (buttonId) {
                             switch (buttonId) {
                                 case "refresh":
-                                    loadGrid(tabbar, table, false);
+                                    loadGrid(tabbar, DBName, tableName, false);
                                     break;
                                 case "structure":
-                                    loadGrid(tabbar, table, true);
+                                    loadGrid(tabbar, DBName, tableName, true);
+                                    break;
+                                case "del":
+                                    window.dhtmlx.confirm({
+                                        title: "Information!",
+                                        type: "confirm-error",
+                                        text: "Delete the selected row ?",
+                                        callback: function (result) {
+                                            //     true   or    false
+                                            if (result) {
+                                                var tabGrid = tabbar.tabs(tableName).getAttachedObject();
+                                                var rowId = tabGrid.getSelectedRowId();
+                                                if (rowId == null) {
+                                                    window.dhtmlx.alert("select a row first");
+                                                    return;
+                                                }
+                                                //第一列名字
+                                                var colName = tabGrid.getColLabel(0);
+                                                //获得选定行的第一列的值
+                                                var value = tabGrid.cells(rowId, 0).getValue();
+                                                var parameters = {"DBName": DBName, "tableName": tableName, "colName": colName, "value": value};
+                                                $.ajax({
+                                                    url: "deleteRow", data: parameters, type: "post",
+                                                    dataType: "json", success: function (data) {
+                                                        if (data.status === "error") {
+                                                            window.dhtmlx.alert(data.message);
+                                                        } else {
+                                                            tabGrid.deleteRow(rowId);
+                                                        }
+                                                    }, error: function () {
+                                                        window.dhtmlx.alert("Failed to delete,Try again later");
+                                                    }
+                                                });
+                                            }
+                                        }
+                                    });
                                     break;
                                 case "close":
-                                    // close   id  and select start
-                                    tabbar.tabs(table).close();
+                                    tabbar.tabs(tableName).close();
                                     break;
                             }
                         });
                     } else {
                         // 选中指定选项卡并显示其内容
-                        tabbar.tabs(table).setActive();
+                        tabbar.tabs(tableName).setActive();
                     }
                 }
             });
         });
 
-        function loadGrid(tabbar, table, structure) {
-            $.get("retrieve", {"tableName": table, "structure": structure}, function (data) {
-                var grid = tabbar.tabs(table).attachGrid();
-                grid.setHeader(data.head.join(","));
-                grid.init();
-                if (data.status !== "ok") {
-                    //将数据定义成json格式,添加样式,以备grid加载
-                    var result = {
-                        rows: [{style: "color:red", data: data.data}]
-                    };
-                    grid.parse(result, "json");
-                } else {
-                    grid.parse(data.data, "jsarray");
+        function loadGrid(tabbar, DBName, tableName, structure) {
+            var parameters = {"DBName": DBName, "tableName": tableName, "structure": structure};
+            $.ajax({
+                url: "retrieve", data: parameters, type: "post",
+                dataType: "json", success: function (data) {
+                    tabbar.tabs(tableName).attachGrid().parse(data, "json");
+                }, error: function () {
+                    window.dhtmlx.alert("Inner Exception,Try again later");
                 }
             });
         }
@@ -260,8 +273,7 @@
             } else {
                 var arr = [itemId];
                 while (itemId = treeView.getParentId(itemId)) {
-                    // push() 向数组(arr)的末尾添加一个或更多元素，并返回新的长度。
-                    arr.push(itemId);
+                    arr.push(itemId); // push() 向数组(arr)的末尾添加一个或更多元素，并返回新的长度。
                 }
                 return arr;
             }

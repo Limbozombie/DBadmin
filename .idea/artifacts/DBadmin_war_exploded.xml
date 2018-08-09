@@ -8,13 +8,18 @@
         </element>
         <element id="directory" name="lib">
           <element id="library" level="project" name="Maven: MySQL:mysql-connector-java:5.1.6" />
-          <element id="library" level="project" name="Maven: commons-dbcp:commons-dbcp:1.4" />
-          <element id="library" level="project" name="Maven: commons-pool:commons-pool:1.5.4" />
           <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.9.6" />
           <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.9.0" />
           <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-core:2.9.6" />
+          <element id="library" level="project" name="Maven: org.springframework:spring-webmvc:5.0.7.RELEASE" />
+          <element id="library" level="project" name="Maven: org.springframework:spring-aop:5.0.7.RELEASE" />
+          <element id="library" level="project" name="Maven: org.springframework:spring-beans:5.0.7.RELEASE" />
+          <element id="library" level="project" name="Maven: org.springframework:spring-context:5.0.7.RELEASE" />
+          <element id="library" level="project" name="Maven: org.springframework:spring-core:5.0.7.RELEASE" />
+          <element id="library" level="project" name="Maven: org.springframework:spring-jcl:5.0.7.RELEASE" />
+          <element id="library" level="project" name="Maven: org.springframework:spring-expression:5.0.7.RELEASE" />
+          <element id="library" level="project" name="Maven: org.springframework:spring-web:5.0.7.RELEASE" />
           <element id="library" level="project" name="Maven: commons-dbutils:commons-dbutils:1.5" />
-          <element id="library" level="project" name="Spring" />
         </element>
       </element>
       <element id="javaee-facet-resources" facet="DBadmin/web/Web" />

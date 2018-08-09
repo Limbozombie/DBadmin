@@ -28,19 +28,24 @@ public class ConnectionControllerTest extends BaseTest {
     @Test
     public void getConnection() throws Exception {
         
-        mv.perform(post("/connection")).andDo(print());
+        mv.perform(post("/connection?serverName=aaa&userName=&password=")).andDo(print());
     }
     
     @Test
     public void retrieve() throws Exception {
         
-        mv.perform(post("/retrieve?tableName=user&structure=true")).andDo(print());
+        mv.perform(post("/retrieve?DBName=web&tableName=user&structure=true")).andDo(print());
     }
     
     @Test
     public void query() throws Exception {
         
-        mv.perform(post("/query?sqlStatement=select * from books")).andDo(print());
+        mv.perform(post("/query?DBName=web&sqlStatement=select * from books")).andDo(print());
     }
     
+    @Test
+    public void deleteRow() throws Exception {
+        
+        mv.perform(post("/deleteRow?DBName=web&tableName=number&colName=id&value=3")).andDo(print());
+    }
 }

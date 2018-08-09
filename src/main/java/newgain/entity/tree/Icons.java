@@ -13,6 +13,13 @@ public class Icons {
         this.file = file;
     }
     
+    public Icons(String common) {
+        
+        this.folder_opened = common;
+        this.folder_closed = common;
+        this.file = common;
+    }
+    
     public String getFolder_opened() {
         
         return folder_opened;
