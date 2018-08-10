@@ -9,13 +9,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import newgain.dao.Utility;
-import newgain.entity.grid.Grid;
-import newgain.entity.grid.Head;
-import newgain.entity.grid.Rows;
-import newgain.entity.tree.Icons;
-import newgain.entity.tree.TreeDB;
-import newgain.entity.tree.TreeServer;
-import newgain.entity.tree.TreeTable;
+import newgain.entity.Grid;
+import newgain.entity.Grid.Head;
+import newgain.entity.Grid.Rows;
+import newgain.entity.Icons;
+import newgain.entity.TreeView;
+import newgain.entity.TreeView.TreeDB;
+import newgain.entity.TreeView.TreeDB.TreeTable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -34,7 +34,7 @@ public class ConnectionController {
         this.userName = userName;
         this.password = password;
         Map<String, Object> map = new HashMap<String, Object>();
-        List<TreeServer> treeList = new ArrayList<TreeServer>();
+        List<TreeView> treeViewList = new ArrayList<TreeView>();
         try {
             //获得 基础 连接
             con = Utility.getConn(userName , password);
@@ -59,11 +59,11 @@ public class ConnectionController {
                 //创建TreeDB对象,添加至dbList中
                 dbList.add(treeDB);
             }
-            TreeServer treeServer = new TreeServer(serverName , serverName , new Icons("server") , dbList);
+            TreeView treeView = new TreeView(serverName , serverName , new Icons("server") , dbList);
             //创建TreeServer对象,添加到treeList中
-            treeList.add(treeServer);
+            treeViewList.add(treeView);
             map.put("status" , "ok");
-            map.put("data" , treeList);
+            map.put("data" , treeViewList);
         } catch (Exception e) {
             map.put("status" , "error");
             map.put("data" , e.getMessage());

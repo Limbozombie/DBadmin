@@ -11,6 +11,12 @@ import java.sql.Statement;
  */
 public class Utility {
     
+    //让工具类不可实例化
+    private Utility() throws Exception {
+        
+        throw new Exception("Don’t  instantiate this class ");
+    }
+    
     /**
      * 获取连接
      */
@@ -20,6 +26,7 @@ public class Utility {
         //创建连接
         return DriverManager.getConnection("jdbc:mysql://localhost:3306/?useUnicode=true&characterEncoding=utf8" , name , password);
     }
+    
     public static Connection getConn(String database , String name , String password) throws Exception {
         //注册驱动
         Class.forName("com.mysql.jdbc.Driver");

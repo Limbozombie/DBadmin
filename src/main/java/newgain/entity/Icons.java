@@ -1,4 +1,4 @@
-package newgain.entity.tree;
+package newgain.entity;
 
 public class Icons {
     
