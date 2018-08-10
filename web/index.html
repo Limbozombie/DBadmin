@@ -207,6 +207,12 @@
                                     loadGrid(tabbar, DBName, tableName, true);
                                     break;
                                 case "del":
+                                    var tabGrid = tabbar.tabs(tableName).getAttachedObject();
+                                    var rowId = tabGrid.getSelectedRowId();
+                                    if (rowId == null) {
+                                        window.dhtmlx.alert("select a row first");
+                                        return;
+                                    }
                                     window.dhtmlx.confirm({
                                         title: "Information!",
                                         type: "confirm-error",
@@ -214,12 +220,6 @@
                                         callback: function (result) {
                                             //     true   or    false
                                             if (result) {
-                                                var tabGrid = tabbar.tabs(tableName).getAttachedObject();
-                                                var rowId = tabGrid.getSelectedRowId();
-                                                if (rowId == null) {
-                                                    window.dhtmlx.alert("select a row first");
-                                                    return;
-                                                }
                                                 //第一列名字
                                                 var colName = tabGrid.getColLabel(0);
                                                 //获得选定行的第一列的值
