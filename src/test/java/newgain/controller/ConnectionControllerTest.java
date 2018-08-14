@@ -49,5 +49,11 @@ public class ConnectionControllerTest extends BaseTest {
         mv.perform(post("/deleteRow?DBName=web&tableName=number&colName=id&value=3")).andDo(print());
     }
     
+    @Test
+    public void insertRow() throws Exception {
+    
+        connection.insertRow("web","user" , "{\"id\":\"R\",\"username\":\"\",\"password\":\"\",\"cn_activity_end_time\":\"\"}");
+        
+    }
     
 }

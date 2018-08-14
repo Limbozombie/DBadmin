@@ -246,54 +246,51 @@
                                     });
                                     break;
                                 case "insert":
-                                    var win = layout.dhxWins.createWindow("insert", 400, 150, 390, 360);
+                                    var win = layout.dhxWins.createWindow("insert", 400, 150, 400, 360);
                                     win.setModal(true);//窗口出现后不能操作其他元素
-                                    win.setText("Insert One Row");
+                                    win.setText("complete the form");
                                     win.denyResize();
-                                    // var form = win.attachForm([
-                                    //     {
-                                    //         type: "block", width: "auto", offsetLeft: 35, offsetTop: 30, list: [
-                                    //             {type: "settings", labelWidth: 120},
-                                    //             {type: "input", name: "serverName", label: "Server Name", required: true},
-                                    //             {type: "input", name: "userName", label: "User Name"},
-                                    //             {type: "password", name: "password", label: "Password"},
-                                    //             {type: "button", name: "save", value: "Save", offsetLeft: 95, offsetTop: 30}
-                                    //         ]
-                                    //     }]);
-                                    var formToInsert = win.attachForm([
-                                        {
-                                            type: "block", width: "auto", offsetLeft: 35, offsetTop: 30
-                                        }
-                                        ]);
-                                    formToInsert.addItem("settings"  ,  {type: "settings", labelWidth: 120},0,0);
-                                    formToInsert.addItem("id",{type: "button", name: "save", value: "Save", offsetLeft: 95, offsetTop: 30},1,0);
-                                    //光标聚焦到form第一项
+                                    var formToInsert = win.attachForm();
+                                    var gridInTab = tabbar.tabs(tableName).getAttachedObject();
+                                    var firstColLabel = gridInTab.getColLabel(0);
+                                    formToInsert.addItem(null, {type: "input", name: firstColLabel, label: firstColLabel, required: true, labelWidth: 140, offsetLeft: 35, offsetTop: 25}, null, null);
+                                    for (var i = 1; i < gridInTab.getColumnsNum(); i++) {
+                                        var colLabel = gridInTab.getColLabel(i);
+                                        formToInsert.addItem(null, {type: "input", name: colLabel, label: colLabel, labelWidth: 140, offsetLeft: 35}, null, null);
+                                    }
+                                    formToInsert.addItem(null, {type: "button", value: "submit", offsetLeft: 159, offsetTop: 30}, null, null);
                                     formToInsert.setFocusOnFirstActive();
-                                    //校验结果
-                                    // formToInsert.attachEvent("onButtonClick", function () {
-                                    //     if (formToInsert.getInput("serverName").value.trim() !== "") {
-                                    //         formToInsert.send("insertRow", "post", function (loader) {
-                                    //             var parsedResponse = JSON.parse(loader.xmlDoc.response);
-                                    //             if (parsedResponse.status === "ok") {
-                                    //                 treeView.loadStruct(parsedResponse.data, null);
-                                    //             } else {
-                                    //                 dhtmlx.alert({
-                                    //                     title: "Information!",
-                                    //                     type: "alert-error",
-                                    //                     text: parsedResponse.data
-                                    //                 });
-                                    //             }
-                                    //             //  true 跳过自动校验
-                                    //         }, true);
-                                    //         //关闭表单窗口
-                                    //         win.close();
-                                    //     } else {
-                                    //         //清除之前输入的数据
-                                    //         formToInsert.getInput("serverName").value = "";
-                                    //         //创建错误提示  message
-                                    //         window.dhtmlx.alert("Server Name is empty");
-                                    //     }
-                                    // });
+                                    formToInsert.attachEvent("onButtonClick", function () {
+                                        if (formToInsert.getInput(firstColLabel).value.trim() !== "") {
+                                            var inputValuesOfForm = {};
+                                            for (var i = 0; i < gridInTab.getColumnsNum(); i++) {
+                                                // inputValuesOfForm.push(formToInsert.getInput(gridInTab.getColLabel(i)).value);
+                                                var colLabel = gridInTab.getColLabel(i);
+                                                inputValuesOfForm[colLabel] = formToInsert.getInput(gridInTab.getColLabel(i)).value;
+                                            }
+                                            var parameters = {"DBName": DBName, "tableName": tableName, "values": JSON.stringify(inputValuesOfForm)};
+                                            $.ajax({
+                                                url: "insertRow", data: parameters, type: "post",
+                                                dataType: "json", success: function (result) {
+                                                    if (result.status === "ok") {
+                                                        win.close();
+                                                        loadGrid(tabbar, DBName, tableName, false);
+                                                    } else {
+                                                        dhtmlx.alert({
+                                                            title: "Failed to insert !",
+                                                            type: "alert-error",
+                                                            text: result.message
+                                                        });
+                                                    }
+                                                }, error: function () {
+                                                    window.dhtmlx.alert("Inner Exception,Contact Administrator");
+                                                }
+                                            });
+                                        } else {
+                                            //创建错误提示
+                                            window.dhtmlx.alert(firstColLabel + " is empty");
+                                        }
+                                    });
                                     break;
                                 case "close":
                                     tabbar.tabs(tableName).close();

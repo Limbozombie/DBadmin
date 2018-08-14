@@ -1,13 +1,19 @@
 package newgain.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import newgain.dao.Utility;
 import newgain.entity.Grid;
 import newgain.entity.Grid.Head;
@@ -16,6 +22,7 @@ import newgain.entity.Icons;
 import newgain.entity.TreeView;
 import newgain.entity.TreeView.TreeDB;
 import newgain.entity.TreeView.TreeDB.TreeTable;
+import org.springframework.http.converter.json.GsonBuilderUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -100,24 +107,57 @@ public class ConnectionController {
         } catch (Exception e) {
             result.put("status" , "error");
             result.put("message" , e.getMessage());
+        } finally {
+            Utility.close(rs , stat , con);
         }
         return result;
     }
     
     @RequestMapping("insertRow")
-    public Map insertRow(String DBName  , String sql) {
+    public Map insertRow(String DBName , String tableName , String values) {
         
         Map<String, String> result = new HashMap<String, String>();
+        ObjectMapper mapper = new ObjectMapper();
+        List<String> colValues = new ArrayList<String>();
         try {
+            Map<String, String> formData = mapper.convertValue(mapper.readTree(values) , Map.class);
+            for (Entry<String, String> entry : formData.entrySet()) {
+                colValues.add(entry.getValue());
+            }
             con = Utility.getConn(DBName , userName , password);
             
+            ResultSet resultSet = con.getMetaData().getColumns(null , "%" , tableName , "%");
+            String[] columnTypes = {"VARCHAR" , "CHAR" , "ENUM" , "SET" , "BLOB" , "TXT"};
+            StringBuilder builder = new StringBuilder();
+            for (int i = 0 ; i < colValues.size() ; i++) {
+                if ("".equals(colValues.get(i))) {
+                    builder.append("null");
+                } else {
+                    resultSet.next();
+                    String columnClassName = resultSet.getString("TYPE_NAME");
+                    if (Arrays.asList(columnTypes).contains(columnClassName)) {
+                        builder.append("'" + colValues.get(i) + "'");
+                    } else {
+                        builder.append(colValues.get(i));
+                    }
+                }
+                if (i != colValues.size() - 1) {
+                    builder.append(",");
+                }
+            }
+            //全表插入
+            String sql = "INSERT INTO " + tableName + " VALUES (" + builder.toString() + ")";
+//            System.out.println(sql);
             con.prepareStatement(sql).execute(sql);
             result.put("status" , "ok");
         } catch (Exception e) {
             result.put("status" , "error");
             result.put("message" , e.getMessage());
+        } finally {
+            Utility.close(rs , stat , con);
         }
         return result;
+        
     }
     
     private Grid getGrid(String[] parameters) {
