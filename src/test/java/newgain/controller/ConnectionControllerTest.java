@@ -1,7 +1,6 @@
 package newgain.controller;
 
 import newgain.BaseTest;
-import newgain.dao.Utility;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +20,7 @@ public class ConnectionControllerTest extends BaseTest {
     private MockMvc mv;
     
     @Before
-    public void setUP() {
+    public void setUp() {
         
         this.mv = MockMvcBuilders.webAppContextSetup(context).build();
     }
@@ -50,14 +49,5 @@ public class ConnectionControllerTest extends BaseTest {
         mv.perform(post("/deleteRow?DBName=web&tableName=number&colName=id&value=3")).andDo(print());
     }
     
-    @Test
-    public void instantiate() {
-        
-        //        try {
-        //            Utility utility = new Utility();
-        //        } catch (Exception e) {
-        //            e.printStackTrace();
-        //        }
-    }
     
 }

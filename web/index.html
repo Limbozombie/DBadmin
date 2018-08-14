@@ -193,7 +193,8 @@
                             items: [
                                 {id: "refresh", type: "button", text: "Refresh", img: "icons/refresh.png"},
                                 {id: "structure", type: "button", text: "Structure", img: "icons/structure.png"},
-                                {id: "del", type: "button", text: "Delete", img: "icons/delrow.gif"},
+                                {id: "del", type: "button", text: "Delete Row", img: "icons/delRow.png"},
+                                {id: "insert", type: "button", text: "Insert Row", img: "icons/insert.png"},
                                 {id: "close", type: "button", text: "Close", img: "icons/close.png"}
                             ]
                         });
@@ -201,9 +202,13 @@
                         tabToolbar.attachEvent("onClick", function (buttonId) {
                             switch (buttonId) {
                                 case "refresh":
+                                    tabToolbar.showItem("del");
+                                    tabToolbar.showItem("insert");
                                     loadGrid(tabbar, DBName, tableName, false);
                                     break;
                                 case "structure":
+                                    tabToolbar.hideItem("del");
+                                    tabToolbar.hideItem("insert");
                                     loadGrid(tabbar, DBName, tableName, true);
                                     break;
                                 case "del":
@@ -218,11 +223,10 @@
                                         type: "confirm-error",
                                         text: "Delete the selected row ?",
                                         callback: function (result) {
-                                            //     true   or    false
                                             if (result) {
-                                                //第一列名字
+                                                //第一字段名
                                                 var colName = tabGrid.getColLabel(0);
-                                                //获得选定行的第一列的值
+                                                //获得选定行的第一字段对应的值
                                                 var value = tabGrid.cells(rowId, 0).getValue();
                                                 var parameters = {"DBName": DBName, "tableName": tableName, "colName": colName, "value": value};
                                                 $.ajax({
@@ -241,13 +245,62 @@
                                         }
                                     });
                                     break;
+                                case "insert":
+                                    var win = layout.dhxWins.createWindow("insert", 400, 150, 390, 360);
+                                    win.setModal(true);//窗口出现后不能操作其他元素
+                                    win.setText("Insert One Row");
+                                    win.denyResize();
+                                    // var form = win.attachForm([
+                                    //     {
+                                    //         type: "block", width: "auto", offsetLeft: 35, offsetTop: 30, list: [
+                                    //             {type: "settings", labelWidth: 120},
+                                    //             {type: "input", name: "serverName", label: "Server Name", required: true},
+                                    //             {type: "input", name: "userName", label: "User Name"},
+                                    //             {type: "password", name: "password", label: "Password"},
+                                    //             {type: "button", name: "save", value: "Save", offsetLeft: 95, offsetTop: 30}
+                                    //         ]
+                                    //     }]);
+                                    var formToInsert = win.attachForm([
+                                        {
+                                            type: "block", width: "auto", offsetLeft: 35, offsetTop: 30
+                                        }
+                                        ]);
+                                    formToInsert.addItem("settings"  ,  {type: "settings", labelWidth: 120},0,0);
+                                    formToInsert.addItem("id",{type: "button", name: "save", value: "Save", offsetLeft: 95, offsetTop: 30},1,0);
+                                    //光标聚焦到form第一项
+                                    formToInsert.setFocusOnFirstActive();
+                                    //校验结果
+                                    // formToInsert.attachEvent("onButtonClick", function () {
+                                    //     if (formToInsert.getInput("serverName").value.trim() !== "") {
+                                    //         formToInsert.send("insertRow", "post", function (loader) {
+                                    //             var parsedResponse = JSON.parse(loader.xmlDoc.response);
+                                    //             if (parsedResponse.status === "ok") {
+                                    //                 treeView.loadStruct(parsedResponse.data, null);
+                                    //             } else {
+                                    //                 dhtmlx.alert({
+                                    //                     title: "Information!",
+                                    //                     type: "alert-error",
+                                    //                     text: parsedResponse.data
+                                    //                 });
+                                    //             }
+                                    //             //  true 跳过自动校验
+                                    //         }, true);
+                                    //         //关闭表单窗口
+                                    //         win.close();
+                                    //     } else {
+                                    //         //清除之前输入的数据
+                                    //         formToInsert.getInput("serverName").value = "";
+                                    //         //创建错误提示  message
+                                    //         window.dhtmlx.alert("Server Name is empty");
+                                    //     }
+                                    // });
+                                    break;
                                 case "close":
                                     tabbar.tabs(tableName).close();
                                     break;
                             }
                         });
                     } else {
-                        // 选中指定选项卡并显示其内容
                         tabbar.tabs(tableName).setActive();
                     }
                 }

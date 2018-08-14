@@ -33,17 +33,17 @@ public class ConnectionController {
         
         this.userName = userName;
         this.password = password;
-        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> result = new HashMap<String, Object>();
         List<TreeView> treeViewList = new ArrayList<TreeView>();
         try {
             //获得 基础 连接
             con = Utility.getConn(userName , password);
             String sql = "SHOW DATABASES";
             //查询所有数据库名
-            ResultSet rs = con.prepareStatement(sql).executeQuery(sql);
+            ResultSet databasesNames = con.prepareStatement(sql).executeQuery(sql);
             List<TreeDB> dbList = new ArrayList<TreeDB>();
-            while (rs.next()) {
-                String dbName = rs.getString(1);
+            while (databasesNames.next()) {
+                String dbName = databasesNames.getString(1);
                 //获得对应数据库名的连接
                 con = Utility.getConn(dbName , userName , password);
                 ResultSet tables = con.getMetaData().getTables(null , null , "%" , null);
@@ -62,75 +62,86 @@ public class ConnectionController {
             TreeView treeView = new TreeView(serverName , serverName , new Icons("server") , dbList);
             //创建TreeServer对象,添加到treeList中
             treeViewList.add(treeView);
-            map.put("status" , "ok");
-            map.put("data" , treeViewList);
+            result.put("status" , "ok");
+            result.put("data" , treeViewList);
         } catch (Exception e) {
-            map.put("status" , "error");
-            map.put("data" , e.getMessage());
+            result.put("status" , "error");
+            result.put("data" , e.getMessage());
         } finally {
             Utility.close(rs , stat , con);
         }
-        return map;
+        return result;
     }
     
     @RequestMapping("retrieve")
     public Grid retrieve(String DBName , String tableName , String structure) {
         
-        String[] str = {DBName , tableName , structure};
-        return getMap(str);
+        String[] parameters = {DBName , tableName , structure};
+        
+        return getGrid(parameters);
     }
     
     @RequestMapping("query")
-    public Grid query(String DBName , String sqlStatement) {
+    public Grid queryBySQL(String DBName , String sqlStatement) {
         
-        String[] str = {DBName , sqlStatement};
-        return getMap(str);
+        String[] parameters = {DBName , sqlStatement};
+        return getGrid(parameters);
     }
     
     @RequestMapping("deleteRow")
     public Map deleteRow(String DBName , String tableName , String colName , String value) {
         
-        Map<String, String> map = new HashMap<String, String>();
+        Map<String, String> result = new HashMap<String, String>();
         try {
             con = Utility.getConn(DBName , userName , password);
             String sql = "DELETE FROM " + tableName + " WHERE " + colName + "= " + value;
-            boolean b = con.prepareStatement(sql).execute(sql);
-            //            if (b) {
-            map.put("status" , "ok");
-            //            } else {
-            //                map.put("status" , "error");
-            //                map.put("message" , "Inner Exception ,Contact DB Administrator");
-            //            }
+            con.prepareStatement(sql).execute(sql);
+            result.put("status" , "ok");
         } catch (Exception e) {
-            map.put("status" , "error");
-            map.put("message" , e.getMessage());
+            result.put("status" , "error");
+            result.put("message" , e.getMessage());
         }
-        return map;
+        return result;
     }
     
-    private Grid getMap(String[] str) {
+    @RequestMapping("insertRow")
+    public Map insertRow(String DBName  , String sql) {
+        
+        Map<String, String> result = new HashMap<String, String>();
+        try {
+            con = Utility.getConn(DBName , userName , password);
+            
+            con.prepareStatement(sql).execute(sql);
+            result.put("status" , "ok");
+        } catch (Exception e) {
+            result.put("status" , "error");
+            result.put("message" , e.getMessage());
+        }
+        return result;
+    }
+    
+    private Grid getGrid(String[] parameters) {
         
         List<Head> headList = new ArrayList<Head>();
         List<Rows> rowsList = new ArrayList<Rows>();
         String sql = "";
-        String DBName = str[0];
+        String DBName = parameters[0];
         String tableName;
-        String structure;
-        switch (str.length) {
-            case 2:
-                sql = str[1];
-                break;
-            case 3:
-                tableName = str[1];
-                structure = str[2];
-                if ("true".equals(structure)) {
-                    sql = "DESC  " + tableName;
-                } else {
-                    sql = "SELECT * FROM  " + tableName;
-                }
-                break;
-        }
         try {
+            switch (parameters.length) {
+                case 2:
+                    sql = parameters[1];
+                    break;
+                case 3:
+                    tableName = parameters[1];
+                    boolean isStructure = Boolean.parseBoolean(parameters[2]);
+                    if (isStructure) {
+                        sql = "DESC  " + tableName;
+                    } else {
+                        sql = "SELECT * FROM  " + tableName;
+                    }
+                    break;
+            }
             con = Utility.getConn(DBName , userName , password);
             ResultSet rs = con.prepareStatement(sql).executeQuery(sql);
             ResultSetMetaData rsMetaData = rs.getMetaData();
@@ -153,7 +164,7 @@ public class ConnectionController {
             headList.clear();
             rowsList.clear();
             
-            headList.add(new Head(500 , "ro" , "left" , "Error"));
+            headList.add(new Head(900 , "ro" , "left" , "Error"));
             List<String> errMsg = new ArrayList<String>();
             errMsg.add(e.getMessage());
             Rows rows = new Rows(0 , errMsg , "color:red");
