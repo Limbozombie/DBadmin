@@ -117,10 +117,13 @@ public class ConnectionController {
     public Map insertRow(String DBName , String tableName , String values) {
         
         Map<String, String> result = new HashMap<String, String>();
-        ObjectMapper mapper = new ObjectMapper();
         List<String> colValues = new ArrayList<String>();
         try {
+//            System.out.println(values);
+            //将字符串形式的json对象'values'转化为Map
+            ObjectMapper mapper = new ObjectMapper();
             Map<String, String> formData = mapper.convertValue(mapper.readTree(values) , Map.class);
+           
             for (Entry<String, String> entry : formData.entrySet()) {
                 colValues.add(entry.getValue());
             }
@@ -147,7 +150,7 @@ public class ConnectionController {
             }
             //全表插入
             String sql = "INSERT INTO " + tableName + " VALUES (" + builder.toString() + ")";
-//            System.out.println(sql);
+            //            System.out.println(sql);
             con.prepareStatement(sql).execute(sql);
             result.put("status" , "ok");
         } catch (Exception e) {
