@@ -1,6 +1,5 @@
 package newgain.controller;
 
-import java.util.Map;
 import newgain.BaseTest;
 import org.junit.Before;
 import org.junit.Test;
@@ -56,5 +55,6 @@ public class ConnectionControllerTest extends BaseTest {
        connection.insertRow("web" , "user" , "{\"id\":\"R\",\"username\":\"\",\"password\":\"\",\"cn_activity_end_time\":\"\"}");
     
     }
+    
     
 }
