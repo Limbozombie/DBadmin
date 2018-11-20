@@ -24,7 +24,6 @@
             <artifactId>jackson-databind</artifactId>
             <version>2.9.6</version>
         </dependency>
-
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-all</artifactId>
@@ -51,5 +50,4 @@
         </dependency>
 
     </dependencies>
-
 </project>
